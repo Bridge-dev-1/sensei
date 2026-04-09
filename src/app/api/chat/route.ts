@@ -15,14 +15,49 @@ function buildSystemPrompt(mode: string, topic?: string, planDay?: number): stri
   if (planDay) {
     const day = STUDY_PLAN[planDay - 1]
     if (day) {
-      const modeLabel = { chat: 'clase de introducción', quiz: 'quiz', review: 'sesión de repaso' }[day.mode] ?? 'sesión'
       prompt += `\n\n## CONTEXTO DEL PLAN DE ESTUDIO\n` +
         `El estudiante sigue un plan de 87 días para el JLPT N3 (examen: ${EXAM_DATE}).\n` +
         `Hoy es el Día ${planDay}/87. Fase ${day.phase}: ${PHASE_LABELS[day.phase]}.\n` +
-        `Tema de hoy: "${day.topicName}" — ${day.description}.\n` +
-        `Tipo de sesión: ${modeLabel}.\n` +
-        `Conduce la sesión enfocándote EXCLUSIVAMENTE en este tema. ` +
-        `Empieza con una bienvenida breve mencionando el día ${planDay}/87 y el tema, luego arranca directamente.`
+        `Tema de hoy: "${day.topicName}" — ${day.description}.\n`
+
+      if (day.mode === 'chat') {
+        prompt +=
+          `\n## ESTRUCTURA DE LA CLASE (OBLIGATORIA)\n` +
+          `Conduce la clase EN PARTES. NUNCA expliques todo el tema de golpe. Sigue este flujo estricto:\n\n` +
+          `**PARTE 1 — Introducción (solo el primer concepto del tema)**\n` +
+          `- Explica UN solo patrón gramatical con claridad en español\n` +
+          `- Da 2 ejemplos con traducción\n` +
+          `- Termina con: "¿Listo para practicar? Intenta completar estas frases:" y pon 2-3 ejercicios de rellena el espacio\n` +
+          `- ESPERA la respuesta del estudiante antes de continuar\n\n` +
+          `**PARTE 2 — Corrección + siguiente concepto**\n` +
+          `- Corrige los ejercicios con explicación breve\n` +
+          `- Introduce el SIGUIENTE patrón del tema\n` +
+          `- Termina con más ejercicios\n` +
+          `- ESPERA la respuesta\n\n` +
+          `**Repite** este ciclo (explica → ejercicio → corrige → siguiente) para cada patrón del tema.\n\n` +
+          `**PARTE FINAL — Examen del día**\n` +
+          `Cuando hayas cubierto todos los patrones del tema, di:\n` +
+          `"¡Muy bien! Ya vimos todo el tema. Ahora vamos con el examen final del día 📝"\n` +
+          `Luego haz un examen de 5 preguntas variadas sobre TODO lo visto hoy:\n` +
+          `- Mezcla: rellena el espacio, elige la opción correcta, traduce la frase\n` +
+          `- Una pregunta a la vez, espera la respuesta\n` +
+          `- Al final da una nota: X/5 y un resumen de lo que dominó bien y lo que debe repasar\n\n` +
+          `**REGLA CLAVE:** Nunca avances a la siguiente parte sin que el estudiante responda los ejercicios. ` +
+          `Si el estudiante pregunta algo fuera del tema, responde brevemente y vuelve al flujo.\n\n` +
+          `Empieza ahora con una bienvenida de una línea (menciona el día ${planDay}/87 y el tema) y arranca la PARTE 1.`
+      } else if (day.mode === 'review') {
+        prompt +=
+          `\n## ESTRUCTURA DEL REPASO (OBLIGATORIA)\n` +
+          `Es una sesión de repaso. Haz preguntas de práctica sobre "${day.topicName}", ` +
+          `una a la vez. Corrige cada respuesta antes de continuar. ` +
+          `Al final da un resumen de fortalezas y áreas a mejorar.`
+      } else if (day.mode === 'quiz') {
+        prompt +=
+          `\n## ESTRUCTURA DEL QUIZ (OBLIGATORIA)\n` +
+          `Haz un quiz de 8 preguntas sobre "${day.topicName}". ` +
+          `Una pregunta a la vez, espera la respuesta, corrige y explica brevemente. ` +
+          `Al final da la nota final X/8.`
+      }
     }
   }
 
